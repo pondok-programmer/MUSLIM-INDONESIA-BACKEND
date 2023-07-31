@@ -19,24 +19,24 @@ use App\Http\Controllers\LoginSystem\VerificationController;
 |
 */
 
-Route::group(['middleware' => ['guest']], function(){
+Route::post('login', [LoginController::class, 'login']);
+
+Route::group(['middleware' => ['guest']], function () {
     //mobile
     Route::post('registerMobile', [AuthMobileController::class, 'registerMobile']);
     Route::post('regiseterMobileAdmin', [AuthMobileController::class, 'regiseterMobileAdmin']);
     Route::get('verify-email-mobile', [VerificationController::class, 'verifyOtp']);
-//mobile end
-//web
+    //mobile end
+    //web
     Route::post('register', [AuthController::class, 'register']);
     Route::post('registerAdmin', [AuthController::class, 'registerAdmin']);
     Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
-//web end
-    Route::post('login', [LoginController::class, 'login']);
+    //web end
     Route::post('sendResetLink', [PasswordController::class, 'sendResetLink']);
     Route::post('resetPassword', [PasswordController::class, 'resetPassword']);
 });
 
-Route::group(['middleware' => ['auth:api', 'role:user,admin']], function(){
+Route::group(['middleware' => ['auth:api', 'role:user,admin']], function () {
     Route::post('logout', [LoginController::class, 'logout']);
     Route::post('changePassword/{id}', [PasswordController::class, 'changePassword']);
-    
- });
+});

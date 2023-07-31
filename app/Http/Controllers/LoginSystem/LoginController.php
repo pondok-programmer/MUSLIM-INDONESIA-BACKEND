@@ -18,7 +18,7 @@ class LoginController extends Controller
             $user = Auth::user();
 
             // Periksa status verifikasi email
-            if ($user->email_verified_at) {
+            if ($user) {
                 if ($user->role === 'admin') {
                     $token = $user->createToken('AdminToken')->accessToken;
                     return response()->json(['token' => $token, 'role' => 'admin'], 200);
