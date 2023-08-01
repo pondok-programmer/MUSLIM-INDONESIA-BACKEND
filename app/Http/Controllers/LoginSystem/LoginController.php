@@ -4,7 +4,9 @@ namespace App\Http\Controllers\LoginSystem;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller
 {
@@ -18,7 +20,7 @@ class LoginController extends Controller
             $user = Auth::user();
 
             // Periksa status verifikasi email
-            if ($user->email_verified_at) {
+            if ($user) {
                 if ($user->role === 'admin') {
                     $token = $user->createToken('AdminToken')->accessToken;
                     return response()->json(['token' => $token, 'role' => 'admin'], 200);
@@ -44,5 +46,38 @@ class LoginController extends Controller
                 'message' => 'Logged out'
             ]
         );
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $user = Socialite::driver('google')->user();
+        } catch (\Exception $e) {
+            return redirect('/login')->withErrors('Failed to authenticate with Google.');
+        }
+
+        // Cek apakah pengguna sudah ada di database berdasarkan email dari Google
+        $existingUser = User::where('email', $user->getEmail())->first();
+
+        if ($existingUser) {
+            Auth::login($existingUser);
+        } else {
+            $newUser = new User();
+            $newUser->full_name = $user->getName();
+            $newUser->username = $user->getName();
+            $newUser->photo = $user->getAvatar();
+            $newUser->email = $user->getEmail();
+            $newUser->save();
+
+            Auth::login($newUser);
+        }
+
+        // return view('dashboard');
+        return response()->json(['message' => 'Logged in successfully.', 'user' => Auth::user()]);
     }
 }
