@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('role')->default('user');
             $table->string('email')->unique();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->string('photo')->default('https://bit.ly/default-photo');
-            $table->string('phone_number')->unique();
+            $table->string('phone_number')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->integer('otp_code')->nullable();
             $table->timestamps();
