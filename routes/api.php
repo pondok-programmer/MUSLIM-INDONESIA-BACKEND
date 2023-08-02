@@ -8,7 +8,7 @@ use App\Http\Controllers\LoginSystem\PasswordController;
 use App\Http\Controllers\LoginSystem\AuthMobileController;
 use App\Http\Controllers\LoginSystem\VerificationController;
 use App\Http\Controllers\ProfileController;
-
+use App\Http\Controllers\PlaceController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -34,12 +34,21 @@ Route::group(['middleware' => ['guest']], function () {
     Route::get('/login/google', [LoginController::class, 'redirectToGoogle']);
     Route::get('/login/google/callback', [LoginController::class, 'handleGoogleCallback']);
     Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
+    
+    //Profile CRUD
+    Route::post('/edit-profile/{id}', [ProfileController::class, 'UpdateProfile']);
+    Route::post('/delete-profile/{id}', [ProfileController::class, 'DeleteProfile']);
+    
+    Route::post('/create-place', [PlaceController::class, 'CreatePlace']);
+    Route::post('/update-place/{id}', [PlaceController::class, 'UpdatePlace']);
+    Route::post('/delete-place/{id}', [PlaceController::class, 'DeletePlace']);
+
+
+
     //web end
     Route::post('sendResetLink', [PasswordController::class, 'sendResetLink']);
     Route::post('resetPassword', [PasswordController::class, 'resetPassword']);
 });
-    Route::post('/edit-profile/{id}', [ProfileController::class, 'UpdateProfile']);
-    Route::post('/delete-profile/{id}', [ProfileController::class, 'DeleteProfile']);
 
 Route::group(['middleware' => ['auth:api', 'role:user,admin']], function () {
     Route::post('logout', [LoginController::class, 'logout']);

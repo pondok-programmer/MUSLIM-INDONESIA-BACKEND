@@ -42,7 +42,7 @@ class ProfileController extends Controller
             CloudinaryStorage::delete($photo);
             $result = CloudinaryStorage::upload($file->getRealPath(), $file->getClientOriginalName());
             $user->update(['photo' => $result]);
-        }
+        }   
         $user->save();
 
         return response()->json($user);
