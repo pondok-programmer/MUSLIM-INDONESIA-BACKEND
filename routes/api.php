@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginSystem\AuthController;
@@ -38,12 +39,15 @@ Route::group(['middleware' => ['guest']], function () {
     //Profile CRUD
     Route::post('/edit-profile/{id}', [ProfileController::class, 'UpdateProfile']);
     Route::post('/delete-profile/{id}', [ProfileController::class, 'DeleteProfile']);
+    Route::post('/read-profile/{username}', [ProfileController::class, 'ReadProfile']);
+
     
     Route::post('/create-place', [PlaceController::class, 'CreatePlace']);
     Route::post('/update-place/{id}', [PlaceController::class, 'UpdatePlace']);
     Route::post('/delete-place/{id}', [PlaceController::class, 'DeletePlace']);
+    Route::post('/read-place', [PlaceController::class, 'ReadAllPlace']);
 
-
+    Route::post('/create-bookmark/{username}/{id}', [BookmarkController::class, 'CreateBookmark']);
 
     //web end
     Route::post('sendResetLink', [PasswordController::class, 'sendResetLink']);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Place;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PlaceController extends Controller
@@ -140,5 +142,35 @@ class PlaceController extends Controller
         $place->save();
 
         return response()->json(["Data Berhasil Diubah"]);
+    }
+
+
+    public function ReadAllPlace()
+    {
+        $auth = auth('api')->user();
+        if (!$auth) {
+            return response()->json(['Anda belum terdaftar']);
+        }
+        $authId = $auth->id;
+
+        $dataUser = User::select('username', 'photo')->where('id', $authId)->get();
+
+        $user = DB::table('places')
+            ->join('users', 'places.user_id', '=', 'users.id')
+            ->select(
+                'users.username',
+                'users.phone_number',
+                'places.*',
+                DB::raw('(SELECT COUNT(*) FROM bookmarks WHERE place_id = places.id AND bookmark = true) as bookmark_count')
+            )
+            ->get();
+
+        $response = [
+            'user' => $user,
+            'login' => $dataUser,
+        ];
+
+        // Kembalikan respon dengan semua tempat (places)
+        return response()->json($response);
     }
 }

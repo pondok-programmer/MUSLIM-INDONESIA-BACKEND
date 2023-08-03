@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -42,7 +43,7 @@ class ProfileController extends Controller
             CloudinaryStorage::delete($photo);
             $result = CloudinaryStorage::upload($file->getRealPath(), $file->getClientOriginalName());
             $user->update(['photo' => $result]);
-        }   
+        }
         $user->save();
 
         return response()->json($user);
@@ -71,5 +72,34 @@ class ProfileController extends Controller
         return response()->json(['message' => 'berhasil dihapus']);
     }
 
-    
+    public function ReadProfile($username)
+    {
+        $auth = auth('api')->user();
+        $authId = $auth->id;
+
+        if (!$auth) {
+            return response()->json(['Anda belum terdaftar']);
+        }
+
+        $user = User::where('username', $username)->first();
+
+        if ($user) {
+            $userId = $user->id;
+            $data = [];
+
+            $data['users'] = $user->only(['full_name', 'username', 'email', 'photo', 'phone_number']);
+
+            $marked = Bookmark::join('places', 'bookmarks.place_id', '=', 'places.id')
+                ->join('users', 'bookmarks.user_id', '=', 'users.id')
+                ->where('bookmarks.user_id', $userId)
+                ->where('bookmarks.bookmark', '>', 0)
+                ->select('places.photo')
+                ->get();
+            $data['marked'] = $marked;
+
+            return response()->json($data);
+        }
+
+        return response()->json(['error' => 'User not found'], 404);
+    }
 }
