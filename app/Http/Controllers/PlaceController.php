@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Place;
 use App\Models\User;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -172,5 +173,105 @@ class PlaceController extends Controller
 
         // Kembalikan respon dengan semua tempat (places)
         return response()->json($response);
+    }
+
+    public function ReadDetailPlace($username, $id)
+    {
+
+        $auth = auth('api')->user();
+        $authId = $auth->id;
+
+        if (!$auth) {
+            return response()->json(['Anda belum terdaftar']);
+        }
+
+        $user = User::where('username', $username)->first();
+        $userId = $user->id;
+
+        $user = DB::table('places')
+            ->join('users', 'places.user_id', '=', 'users.id')
+            ->where('places.id', $id)
+            ->select('users.username', 'users.photo', 'places.*')
+            ->get();
+
+        $bookmark = DB::table('bookmarks')
+            ->where('place_id', $id)
+            ->where('user_id', $authId)
+            ->first();
+
+        $response = [
+            'user' => $user,
+            'bookmark_status' => $bookmark && $bookmark->bookmark ? 'true' : 'false'
+        ];
+
+        return response()->json($response);
+
+
+
+        return response()->json(['error' => 'User tidak ditemukan'], 401);
+    }
+
+    private function geocodeAddress($address)
+    {
+        $base_url = "https://nominatim.openstreetmap.org/search?";
+        $params = http_build_query([
+            'q' => $address,
+            'format' => 'json',
+            'limit' => 1,
+        ]);
+        $client = new Client();
+        $response = $client->get($base_url . $params);
+        $data = json_decode($response->getBody(), true);
+        // dd($data);
+        
+        if (!empty($data)) {
+            return ['latitude' => $data[0]['lat'], 'longitude' => $data[0]['lon']];
+        } else {
+            return null;
+        }
+    }
+
+    private function findNearest($latitude, $longitude)
+    {
+        $radius = 10; // Jarak dalam kilometer
+        $earthRadius = 6371; // Radius bumi dalam kilometer
+
+        $place = Place::selectRaw('*, 
+        (' . $earthRadius . ' * acos(cos(radians(' . $latitude . ')) 
+        * cos(radians(`lat`)) * cos(radians(`long`) 
+        - radians(' . $longitude . ')) + sin(radians(' . $latitude . ')) 
+        * sin(radians(`lat`)))) AS distance')
+            ->having('distance', '<', $radius)
+            ->orderBy('distance', 'asc')
+            ->first();
+
+        return $place;
+    }
+
+    public function search(Request $request)
+    {
+        $address = $request->input('address');
+
+        if (!$address) {
+            return response()->json(['error' => 'Address is required.'], 400);
+        }
+
+        // Lakukan geocoding alamat menggunakan Nominatim
+        $coordinates = $this->geocodeAddress($address);
+
+        if (!$coordinates) {
+            return response()->json(['error' => 'Invalid address.'], 400);
+        }
+
+        $latitude = $coordinates['latitude'];
+        $longitude = $coordinates['longitude'];
+
+        $place = $this->findNearest($latitude, $longitude);
+
+        if (!$place) {
+            return response()->json(['error' => 'No masjid found nearby.'], 404);
+        }
+
+        return response()->json($place);
     }
 }

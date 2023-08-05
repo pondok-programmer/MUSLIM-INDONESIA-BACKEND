@@ -46,6 +46,8 @@ Route::group(['middleware' => ['guest']], function () {
     Route::post('/update-place/{id}', [PlaceController::class, 'UpdatePlace']);
     Route::post('/delete-place/{id}', [PlaceController::class, 'DeletePlace']);
     Route::post('/read-place', [PlaceController::class, 'ReadAllPlace']);
+    Route::post('/read-detail-place/{userame}/{id}', [PlaceController::class, 'ReadDetailPlace']);
+    Route::post('/search', [PlaceController::class, 'search']);
 
     Route::post('/create-bookmark/{username}/{id}', [BookmarkController::class, 'CreateBookmark']);
 
